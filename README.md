@@ -1,4 +1,4 @@
-# LOCALCMSAPI
+# LOCALCMS API
 
 프로젝트에 대한 간단한 소개
 
