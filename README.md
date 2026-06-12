@@ -1,6 +1,13 @@
 # LOCALCMS API
 
+> 🚧 **본 문서는 예시(샘플)입니다.**
+> 현재 실제 **마이그레이션·운영 적용 전** 단계이며, 엔드포인트 경로·파라미터·정책(토큰 유효시간, 호출 한도 등)은 **확정되지 않았습니다.**
+> 실제 연동 전 반드시 담당자 확인이 필요합니다.
+
+
 LOCALCMS(로컬 씨엠에스)의 출금 결과 및 납부자 관리를 위한 API 문서입니다.
+
+> ⚠️ 모든 통신은 반드시 **HTTPS** 로만 이루어집니다. API KEY(uuid)가 평문(HTTP)으로 전송되지 않도록 주의하세요.
 
 ---
 
@@ -23,8 +30,8 @@ LOCALCMS(로컬 씨엠에스)의 출금 결과 및 납부자 관리를 위한 AP
 
 | 기능 | 메서드 | 토큰 방식 | 키 방식 |
 |------|:------:|-----------|---------|
-| 납부내역 조회 | GET | `/api/tpaylist/` | `/api/kpaylist/` |
-| 납부자 등록 | POST | `/api/tcustins/` | `/api/kcustins/` |
+| 납부내역 조회 | GET | `/api/tpaylist/` | `/api/lpaylist/` |
+| 납부자 등록 | POST | `/api/tcustins/` | `/api/lcustins/` |
 
 > 처리 결과는 인증 방식과 무관하게 동일합니다.
 
@@ -79,7 +86,7 @@ LOCALCMS(로컬 씨엠에스)의 출금 결과 및 납부자 관리를 위한 AP
   $curl = curl_init();
 
   curl_setopt_array($curl, array(
-    CURLOPT_URL => 'https://주소/api/kpaylist/',
+    CURLOPT_URL => 'https://주소/api/lpaylist/',
     CURLOPT_RETURNTRANSFER => true,
     CURLOPT_ENCODING => '',
     CURLOPT_MAXREDIRS => 10,
@@ -126,10 +133,15 @@ LOCALCMS(로컬 씨엠에스)의 출금 결과 및 납부자 관리를 위한 AP
 
 ---
 
-## 상세 명세
+## 문서 목록
 
-1. [납부내역조회 KEY 방식 요청 명세 및 샘플](https://github.com/LOCALCMS/LOCALAPI/blob/main/lpaylist.md)
-2. [납부자등록 KEY 방식 요청 명세 및 샘플](https://github.com/LOCALCMS/LOCALAPI/blob/main/lcustint.md)
+| 문서 | 내용 |
+|------|------|
+| [QUICKSTART.md](./QUICKSTART.md) | 간편 가이드 (가장 빠른 시작) |
+| [lpaylist.md](./lpaylist.md) | 납부내역 조회 요청 명세 및 응답 명세 |
+| [lcustint.md](./lcustint.md) | 납부자 등록 요청 명세 및 응답 명세 |
+| [EXAMPLES.md](./EXAMPLES.md) | 언어별 호출 예제 (cURL / PHP / Python / Node.js / Java / C#) |
+| [FAQ.md](./FAQ.md) | 자주 묻는 질문 (연동 담당자용) |
 
 ---
 

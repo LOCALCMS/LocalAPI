@@ -1,22 +1,40 @@
 # LOCALCMS API — 언어별 호출 예제
 
+> 🚧 **본 문서는 예시(샘플)입니다.**
+> 현재 실제 **마이그레이션·운영 적용 전** 단계이며, 엔드포인트 경로·파라미터·정책(토큰 유효시간, 호출 한도 등)은 **확정되지 않았습니다.**
+> 실제 연동 전 반드시 담당자 확인이 필요합니다.
+
+
 각 엔드포인트를 언어별로 호출하는 예제입니다.
 
-> ⚠️ 모든 호출은 **HTTPS** 로만 가능합니다. `주소`, `귀사의 이용기관 식별번호`, `귀사의 KEY` 부분을 실제 발급값으로 바꿔 사용하세요.
+> ⚠️ 모든 호출은 **HTTPS** 로만 가능합니다. `주소`, `귀사의식별번호`, `귀사의KEY`, `{TOKEN}` 부분을 실제 발급값으로 바꿔 사용하세요.
 >
-> ⚠️ API KEY(uuid)는 소스코드에 하드코딩하지 말고 **환경변수**로 관리하는 것을 권장합니다. (예제는 가독성을 위해 직접 표기)
+> ⚠️ API KEY(uuid)·토큰은 소스코드에 하드코딩하지 말고 **환경변수**로 관리하는 것을 권장합니다. (예제는 가독성을 위해 직접 표기)
+
+## 인증 방식 요약
+
+| 방식 | 인증 헤더 | 비고 |
+|------|-----------|------|
+| KEY 방식 | `orgcode`, `uuid` | 영구 키. 서버 간 통신에만 사용 |
+| TOKEN 방식 | `authorization: Bearer {TOKEN}` | `/auth/token` 으로 발급. 만료 시 재발급 |
+
+> TOKEN 방식은 토큰 자체가 이용기관을 식별하므로 `orgcode`·`uuid` 헤더가 필요 없습니다.
 
 ## 목차
 
-1. [토큰 발급](#1-토큰-발급--authtoken) — `POST /auth/token`
-2. [납부내역 조회](#2-납부내역-조회--apikpaylist) — `GET /api/kpaylist/`
-3. [납부자 등록](#3-납부자-등록--apikcustins) — `POST /api/kcustins/`
+1. [토큰 발급](#1-토큰-발급) — `POST /auth/token`
+2. [납부내역 조회](#2-납부내역-조회)
+   - [2-A. KEY 방식](#2-a-key-방식--get-apilpaylist) — `GET /api/lpaylist/`
+   - [2-B. TOKEN 방식](#2-b-token-방식--get-apitpaylist) — `GET /api/tpaylist/`
+3. [납부자 등록](#3-납부자-등록)
+   - [3-A. KEY 방식](#3-a-key-방식--post-apilcustins) — `POST /api/lcustins/`
+   - [3-B. TOKEN 방식](#3-b-token-방식--post-apitcustins) — `POST /api/tcustins/`
 
 ---
 
-## 1. 토큰 발급 — `POST /auth/token`
+## 1. 토큰 발급
 
-`orgcode`, `uuid` 를 form-urlencoded 바디로 전송합니다.
+`POST /auth/token` — `orgcode`, `uuid` 를 form-urlencoded 바디로 전송합니다. 응답으로 Access Token을 받습니다.
 
 ### cURL
 
@@ -55,10 +73,7 @@ echo $code . "\n" . $response;
 import requests
 
 url = "https://주소/auth/token"
-data = {
-    "orgcode": "귀사의식별번호",
-    "uuid": "귀사의KEY",
-}
+data = {"orgcode": "귀사의식별번호", "uuid": "귀사의KEY"}
 res = requests.post(url, data=data, timeout=10)
 print(res.status_code)
 print(res.text)
@@ -118,17 +133,17 @@ Console.WriteLine(await res.Content.ReadAsStringAsync());
 
 ---
 
-## 2. 납부내역 조회 — `GET /api/kpaylist/`
+## 2. 납부내역 조회
 
 조회 파라미터(`stdt`, `enddt`, `custcd`, `value1`, `value_type`, `sum_type`, `seltype`)를 **HTTP 헤더**로 전송합니다.
+예시는 "납부자번호로 개별 납부내역을 실출금일 기준 조회" (`value_type=1`, `sum_type=0`, `seltype=0`) 입니다.
 
-> 예시는 "납부자번호로 개별 납부내역을 실출금일 기준으로 조회"하는 경우입니다.
-> (`value_type=1`, `sum_type=0`, `seltype=0`)
+### 2-A. KEY 방식 — `GET /api/lpaylist/`
 
-### cURL
+#### cURL
 
 ```bash
-curl -X GET "https://주소/api/kpaylist/" \
+curl -X GET "https://주소/api/lpaylist/" \
   -H "orgcode: 귀사의식별번호" \
   -H "uuid: 귀사의KEY" \
   -H "stdt: 20240101" \
@@ -140,13 +155,13 @@ curl -X GET "https://주소/api/kpaylist/" \
   -H "seltype: 0"
 ```
 
-### PHP
+#### PHP
 
 ```php
 <?php
 $curl = curl_init();
 curl_setopt_array($curl, array(
-  CURLOPT_URL => 'https://주소/api/kpaylist/',
+  CURLOPT_URL => 'https://주소/api/lpaylist/',
   CURLOPT_RETURNTRANSFER => true,
   CURLOPT_CUSTOMREQUEST => 'GET',
   CURLOPT_HTTPHEADER => array(
@@ -166,12 +181,12 @@ curl_close($curl);
 echo $response;
 ```
 
-### Python (requests)
+#### Python (requests)
 
 ```python
 import requests
 
-url = "https://주소/api/kpaylist/"
+url = "https://주소/api/lpaylist/"
 headers = {
     "orgcode": "귀사의식별번호",
     "uuid": "귀사의KEY",
@@ -185,13 +200,13 @@ headers = {
 }
 res = requests.get(url, headers=headers, timeout=10)
 print(res.status_code)
-print(res.json())   # 정상 시 JSON 배열
+print(res.json())
 ```
 
-### Node.js (fetch, v18+)
+#### Node.js (fetch, v18+)
 
 ```javascript
-const res = await fetch("https://주소/api/kpaylist/", {
+const res = await fetch("https://주소/api/lpaylist/", {
   method: "GET",
   headers: {
     "orgcode": "귀사의식별번호",
@@ -209,7 +224,7 @@ console.log(res.status);
 console.log(await res.json());
 ```
 
-### Java (11+ HttpClient)
+#### Java (11+ HttpClient)
 
 ```java
 import java.net.URI;
@@ -217,7 +232,7 @@ import java.net.http.*;
 
 HttpClient client = HttpClient.newHttpClient();
 HttpRequest req = HttpRequest.newBuilder()
-    .uri(URI.create("https://주소/api/kpaylist/"))
+    .uri(URI.create("https://주소/api/lpaylist/"))
     .header("orgcode", "귀사의식별번호")
     .header("uuid", "귀사의KEY")
     .header("stdt", "20240101")
@@ -235,11 +250,11 @@ System.out.println(res.statusCode());
 System.out.println(res.body());
 ```
 
-### C# (HttpClient)
+#### C# (HttpClient)
 
 ```csharp
 using var client = new HttpClient();
-var req = new HttpRequestMessage(HttpMethod.Get, "https://주소/api/kpaylist/");
+var req = new HttpRequestMessage(HttpMethod.Get, "https://주소/api/lpaylist/");
 req.Headers.Add("orgcode", "귀사의식별번호");
 req.Headers.Add("uuid", "귀사의KEY");
 req.Headers.Add("stdt", "20240101");
@@ -255,18 +270,147 @@ Console.WriteLine((int)res.StatusCode);
 Console.WriteLine(await res.Content.ReadAsStringAsync());
 ```
 
----
+### 2-B. TOKEN 방식 — `GET /api/tpaylist/`
 
-## 3. 납부자 등록 — `POST /api/kcustins/`
+KEY 방식과 동일하되, `orgcode`·`uuid` 헤더 대신 `authorization: Bearer {TOKEN}` 을 사용합니다. 나머지 조회 파라미터는 동일합니다.
 
-`orgcode`, `uuid`, `Content-Type` 은 **헤더**로, 나머지 등록 정보는 **form-urlencoded 바디**로 전송합니다.
-
-> 자동채번 이용기관은 `custcd` 를 공란으로 둡니다. (대부분 공란)
-
-### cURL
+#### cURL
 
 ```bash
-curl -X POST "https://주소/api/kcustins/" \
+curl -X GET "https://주소/api/tpaylist/" \
+  -H "authorization: Bearer {TOKEN}" \
+  -H "stdt: 20240101" \
+  -H "enddt: 20241231" \
+  -H "custcd: 납부자번호" \
+  -H "value1: " \
+  -H "value_type: 1" \
+  -H "sum_type: 0" \
+  -H "seltype: 0"
+```
+
+#### PHP
+
+```php
+<?php
+$curl = curl_init();
+curl_setopt_array($curl, array(
+  CURLOPT_URL => 'https://주소/api/tpaylist/',
+  CURLOPT_RETURNTRANSFER => true,
+  CURLOPT_CUSTOMREQUEST => 'GET',
+  CURLOPT_HTTPHEADER => array(
+    'authorization: Bearer {TOKEN}',
+    'stdt: 20240101',
+    'enddt: 20241231',
+    'custcd: 납부자번호',
+    'value1: ',
+    'value_type: 1',
+    'sum_type: 0',
+    'seltype: 0',
+  ),
+));
+$response = curl_exec($curl);
+curl_close($curl);
+echo $response;
+```
+
+#### Python (requests)
+
+```python
+import requests
+
+url = "https://주소/api/tpaylist/"
+headers = {
+    "authorization": "Bearer {TOKEN}",
+    "stdt": "20240101",
+    "enddt": "20241231",
+    "custcd": "납부자번호",
+    "value1": "",
+    "value_type": "1",
+    "sum_type": "0",
+    "seltype": "0",
+}
+res = requests.get(url, headers=headers, timeout=10)
+print(res.status_code)
+print(res.json())
+```
+
+#### Node.js (fetch, v18+)
+
+```javascript
+const res = await fetch("https://주소/api/tpaylist/", {
+  method: "GET",
+  headers: {
+    "authorization": "Bearer {TOKEN}",
+    "stdt": "20240101",
+    "enddt": "20241231",
+    "custcd": "납부자번호",
+    "value1": "",
+    "value_type": "1",
+    "sum_type": "0",
+    "seltype": "0",
+  },
+});
+console.log(res.status);
+console.log(await res.json());
+```
+
+#### Java (11+ HttpClient)
+
+```java
+import java.net.URI;
+import java.net.http.*;
+
+HttpClient client = HttpClient.newHttpClient();
+HttpRequest req = HttpRequest.newBuilder()
+    .uri(URI.create("https://주소/api/tpaylist/"))
+    .header("authorization", "Bearer {TOKEN}")
+    .header("stdt", "20240101")
+    .header("enddt", "20241231")
+    .header("custcd", "납부자번호")
+    .header("value1", "")
+    .header("value_type", "1")
+    .header("sum_type", "0")
+    .header("seltype", "0")
+    .GET()
+    .build();
+
+HttpResponse<String> res = client.send(req, HttpResponse.BodyHandlers.ofString());
+System.out.println(res.statusCode());
+System.out.println(res.body());
+```
+
+#### C# (HttpClient)
+
+```csharp
+using var client = new HttpClient();
+var req = new HttpRequestMessage(HttpMethod.Get, "https://주소/api/tpaylist/");
+req.Headers.Add("authorization", "Bearer {TOKEN}");
+req.Headers.Add("stdt", "20240101");
+req.Headers.Add("enddt", "20241231");
+req.Headers.Add("custcd", "납부자번호");
+req.Headers.Add("value1", "");
+req.Headers.Add("value_type", "1");
+req.Headers.Add("sum_type", "0");
+req.Headers.Add("seltype", "0");
+
+var res = await client.SendAsync(req);
+Console.WriteLine((int)res.StatusCode);
+Console.WriteLine(await res.Content.ReadAsStringAsync());
+```
+
+---
+
+## 3. 납부자 등록
+
+`orgcode`, `uuid`(또는 토큰), `Content-Type` 은 **헤더**로, 나머지 등록 정보는 **form-urlencoded 바디**로 전송합니다.
+자동채번 이용기관은 `custcd` 를 공란으로 둡니다. (대부분 공란)
+
+### 3-A. KEY 방식 — `POST /api/lcustins/`
+
+#### cURL
+
+```bash
+curl -X POST "https://주소/api/lcustins/" \
   -H "orgcode: 귀사의식별번호" \
   -H "uuid: 귀사의KEY" \
   -H "Content-Type: application/x-www-form-urlencoded" \
@@ -288,13 +432,13 @@ curl -X POST "https://주소/api/kcustins/" \
   --data-urlencode "paystartdt=20240101"
 ```
 
-### PHP
+#### PHP
 
 ```php
 <?php
 $curl = curl_init();
 curl_setopt_array($curl, array(
-  CURLOPT_URL => 'https://주소/api/kcustins/',
+  CURLOPT_URL => 'https://주소/api/lcustins/',
   CURLOPT_RETURNTRANSFER => true,
   CURLOPT_CUSTOMREQUEST => 'POST',
   CURLOPT_HTTPHEADER => array(
@@ -327,12 +471,12 @@ echo $response;
 curl_close($curl);
 ```
 
-### Python (requests)
+#### Python (requests)
 
 ```python
 import requests
 
-url = "https://주소/api/kcustins/"
+url = "https://주소/api/lcustins/"
 headers = {
     "orgcode": "귀사의식별번호",
     "uuid": "귀사의KEY",
@@ -361,7 +505,7 @@ print(res.status_code)   # 200 확인
 print(res.text)
 ```
 
-### Node.js (fetch, v18+)
+#### Node.js (fetch, v18+)
 
 ```javascript
 const body = new URLSearchParams({
@@ -383,7 +527,7 @@ const body = new URLSearchParams({
   paystartdt: "20240101",
 });
 
-const res = await fetch("https://주소/api/kcustins/", {
+const res = await fetch("https://주소/api/lcustins/", {
   method: "POST",
   headers: {
     "orgcode": "귀사의식별번호",
@@ -396,7 +540,7 @@ console.log(res.status);   // 200 확인
 console.log(await res.text());
 ```
 
-### Java (11+ HttpClient)
+#### Java (11+ HttpClient)
 
 ```java
 import java.net.URI;
@@ -431,7 +575,7 @@ String form = params.entrySet().stream()
 
 HttpClient client = HttpClient.newHttpClient();
 HttpRequest req = HttpRequest.newBuilder()
-    .uri(URI.create("https://주소/api/kcustins/"))
+    .uri(URI.create("https://주소/api/lcustins/"))
     .header("orgcode", "귀사의식별번호")
     .header("uuid", "귀사의KEY")
     .header("Content-Type", "application/x-www-form-urlencoded")
@@ -443,11 +587,11 @@ System.out.println(res.statusCode());   // 200 확인
 System.out.println(res.body());
 ```
 
-### C# (HttpClient)
+#### C# (HttpClient)
 
 ```csharp
 using var client = new HttpClient();
-var req = new HttpRequestMessage(HttpMethod.Post, "https://주소/api/kcustins/");
+var req = new HttpRequestMessage(HttpMethod.Post, "https://주소/api/lcustins/");
 req.Headers.Add("orgcode", "귀사의식별번호");
 req.Headers.Add("uuid", "귀사의KEY");
 
@@ -477,6 +621,62 @@ Console.WriteLine((int)res.StatusCode);   // 200 확인
 Console.WriteLine(await res.Content.ReadAsStringAsync());
 ```
 
+### 3-B. TOKEN 방식 — `POST /api/tcustins/`
+
+> ⚠️ **확인 필요:** 원본 명세에는 토큰 방식 등록 엔드포인트(`tcustins`)가 명시되어 있지 않습니다. 실제 제공 여부를 확인한 뒤 사용하세요. 제공된다면 KEY 방식과 동일하며, `orgcode`·`uuid` 헤더만 `authorization: Bearer {TOKEN}` 으로 교체하면 됩니다.
+
+#### cURL
+
+```bash
+curl -X POST "https://주소/api/tcustins/" \
+  -H "authorization: Bearer {TOKEN}" \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  --data-urlencode "orgcode=귀사의식별번호" \
+  --data-urlencode "custcd=" \
+  --data-urlencode "custnm=홍길동" \
+  --data-urlencode "telno1=02-1111-1111" \
+  --data-urlencode "hphoneno=010-1234-1234" \
+  --data-urlencode "bankcd=001" \
+  --data-urlencode "accountno=1-1111-1111-1" \
+  --data-urlencode "depositer=홍길동" \
+  --data-urlencode "depjuminno=111111" \
+  --data-urlencode "payday=05" \
+  --data-urlencode "paymoney=10000" \
+  --data-urlencode "paystartdt=20240101"
+```
+
+#### Python (requests)
+
+```python
+import requests
+
+url = "https://주소/api/tcustins/"
+headers = {
+    "authorization": "Bearer {TOKEN}",
+    "Content-Type": "application/x-www-form-urlencoded",
+}
+data = {
+    "orgcode": "귀사의식별번호",
+    "custcd": "",
+    "custnm": "홍길동",
+    "telno1": "02-1111-1111",
+    "hphoneno": "010-1234-1234",
+    "bankcd": "001",
+    "accountno": "1-1111-1111-1",
+    "depositer": "홍길동",
+    "depjuminno": "111111",
+    "payday": "05",
+    "paymoney": "10000",
+    "paystartdt": "20240101",
+}
+res = requests.post(url, headers=headers, data=data, timeout=10)
+print(res.status_code)
+print(res.text)
+```
+
+> 나머지 언어(PHP / Node.js / Java / C#)는 위 **3-A KEY 방식 등록** 예제에서
+> `orgcode`·`uuid` 헤더를 `authorization: Bearer {TOKEN}` 한 줄로 교체하면 동일하게 동작합니다.
+
 ---
 
 ## 응답 처리 참고
@@ -484,3 +684,4 @@ Console.WriteLine(await res.Content.ReadAsStringAsync());
 - 정상 처리는 HTTP `200` 으로 확인합니다.
 - 에러 응답 코드(`400/401/403/429` 등)는 각 명세 문서의 "응답 코드" 표를 참고하세요.
 - 한글이 포함된 바디는 UTF-8 인코딩으로 전송됩니다. (Java 예제는 `StandardCharsets.UTF_8` 명시)
+- TOKEN 방식 호출 중 `401` 이 반환되면 토큰이 만료된 것이므로, `/auth/token` 으로 재발급 후 재시도하세요.
